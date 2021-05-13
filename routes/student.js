@@ -9,6 +9,8 @@ router.get('/:id/timetable', studentController.getTimetableForStudent);
 router.get('/:id/assignments', studentController.getAssignments);
 router.get('/:id/attendance', studentController.getAttendanceForStudent);
 router.get('/:id/grades', studentController.getGradesForStudent);
+router.get('/:id/courses/:courseId/grades', studentController.getCourseGradesForStudent);
+router.get('/:id/courses/:courseId/attendance', studentController.getCourseAttendanceForStudent);
 
 
 

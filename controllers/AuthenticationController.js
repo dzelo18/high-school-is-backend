@@ -27,36 +27,33 @@ exports.authorizeRequest = function (req, res, next) {
         let userID = data.userID;
 
         let sql = 'SELECT COUNT(*) AS accountCount FROM USER WHERE userID=?';    
-        ( async()=> {
-            await db.query(sql, [userID], (err, result) => {
-                if(err) res.status(500).json({response: err.message});
-                if(result[0].accountCount == 0) res.status(401).send("Invalid supplied account!");
-            });
-        }) ();
+        db.query(sql, [userID], (err, result) => {
+            if(err) res.status(500).json({response: err.message});
+            if(result[0].accountCount == 0) res.status(401).send("Invalid supplied account!");
+        });
         next();
     });
 }
 
-exports.signup = function (req, res) {
+exports.signup = async function (req, res) {
     let body = req.body;
 
     let accountCredentials = body.credentials;
 
-    ( async ()=> {
         try{
-            await signUpSchema.isValid(accountCredentials).then( isValid => {
-                if(!isValid) throw new Error("Invalid data format supplied!");
-            });
+            if (!signUpSchema.isValidSync(accountCredentials) ){
+                throw new Error("Invalid data format supplied!");
+            }
+            let userId;
+            let hashedPassword = await bcrypt.hash(accountCredentials.password, 10);
 
-            let hashedPassword = bcrypt.hash(accountCredentials.password, 10);
-            let sql = 'INSERT INTO User VALUES ("student", ?, ?)';
-            
-            ( async()=> {
-                await db.query(sql, [accountCredentials.email, hashedPassword], (err, result) => {
-                    if(err) res.status(500).json({response: err.message});
-                    console.log(result);
-                });
-            }) ();
+            let sql = `INSERT INTO User (role, username, password) VALUES ("student", ?, ?)`;
+
+            await db.promise().query(sql, [accountCredentials.email, hashedPassword]).then( ([rows, fields]) => {
+                userId = rows.insertId;
+            }).catch( (err) => {
+                throw new Error(err);
+            });
     
             let tokenIdentifier = crypto.randomBytes(16).toString('hex');
             req.session.tokId = tokenIdentifier;
@@ -74,14 +71,13 @@ exports.signup = function (req, res) {
                 message: "Account created successfully!",
                 token: accessToken,
                 accountData: {
-                    email: accountCredentials.email,
+                    userId: userId,
                     role: "student"
                 }
             });
         } catch(ex){
-            res.status(400).send(ex.message);
+            res.status(400).json({message: ex.message});
         }
-    }) ();
 
 }
 

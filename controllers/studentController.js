@@ -63,3 +63,29 @@ exports.getGradesForStudent = function (req, res) {
         }
     });
 };
+
+exports.getCourseGradesForStudent = function (req, res) {
+    let sql = `SELECT * FROM Grades WHERE studentID = ? AND courseID = ?`;
+    db.query(sql, [req.params.id, req.params.id, req.params.courseId], (err, result) => {
+        if(err) {
+            console.log(err.message);
+            res.status(500).json({errorMessage: err.message});
+        } else {
+            console.log(result);
+            res.status(200).json(result);
+        }
+    });
+};
+
+exports.getCourseAttendanceForStudent = function (req, res) {
+    let sql = `SELECT * FROM Attendance WHERE studentID = ? AND courseID = ?`;
+    db.query(sql, [req.params.id, req.params.courseId], (err, result) => {
+        if(err) {
+            console.log(err.message);
+            res.status(500).json({errorMessage: err.message});
+        } else {
+            console.log(result);
+            res.status(200).json(result);
+        }
+    });
+};
