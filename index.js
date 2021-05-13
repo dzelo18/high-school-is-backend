@@ -2,6 +2,8 @@ const express = require('express');
 const session = require('express-session');
 const cors = require('cors');
 const cookie_parser = require('cookie-parser');
+const dotenv = require('dotenv');
+dotenv.config();
 //const crypto = require('crypto');
 //console.log(crypto.randomBytes(32).toString('hex'));
 
