@@ -25,7 +25,7 @@ exports.authorizeRequest = function (req, res, next) {
     jwt.verify(token, secret, (err, data) => {
         if(err) res.status(401).send("Couldn't validate token!");
         let userID = data.userID;
-
+        if(!userID) res.status(401).send("Invalid Token!");
         let sql = 'SELECT COUNT(*) AS accountCount FROM USER WHERE userID=?';    
         db.query(sql, [userID], (err, result) => {
             if(err) res.status(500).json({response: err.message});
