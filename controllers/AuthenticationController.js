@@ -1,17 +1,19 @@
 const jwt = require('jsonwebtoken');
-const dotenv = require('dotenv');
 const yup = require('yup');
 const bcrypt = require('bcrypt');
 const db = require('../db.js');
 const crypto = require('crypto');
 
-dotenv.config();
 let secret = process.env.TOKEN_SECRET;
 
 const signUpSchema = yup.object({
     email: yup.string().required(),
     password: yup.string().required()
 });
+
+exports.signIn = function (req, res) {
+
+}
 
 exports.authorizeRequest = function (req, res, next) {
     let header = req.headers['authorization'];
@@ -22,16 +24,15 @@ exports.authorizeRequest = function (req, res, next) {
 
     jwt.verify(token, secret, (err, data) => {
         if(err) res.status(401).send("Couldn't validate token!");
-        let email = data.email;
+        let userID = data.userID;
 
-         /*let sql = 'SELECT COUNT(*) AS accountCount FROM USER WHERE email=?';
-            
-            ( async()=> {
-                await db.query(sql, [email], (err, result) => {
-                    if(err) res.status(500).json({response: err.message});
-                    if(result[0].accountCount == 0) res.status(401).send("Invalid supplied account!");
-                });
-        }) ();*/
+        let sql = 'SELECT COUNT(*) AS accountCount FROM USER WHERE userID=?';    
+        ( async()=> {
+            await db.query(sql, [userID], (err, result) => {
+                if(err) res.status(500).json({response: err.message});
+                if(result[0].accountCount == 0) res.status(401).send("Invalid supplied account!");
+            });
+        }) ();
         next();
     });
 }
@@ -47,20 +48,21 @@ exports.signup = function (req, res) {
                 if(!isValid) throw new Error("Invalid data format supplied!");
             });
 
-             /*let hashedPassword = bcrypt.hash(accountCredentials.password, 10);
+            let hashedPassword = bcrypt.hash(accountCredentials.password, 10);
             let sql = 'INSERT INTO User VALUES ("student", ?, ?)';
             
             ( async()=> {
                 await db.query(sql, [accountCredentials.email, hashedPassword], (err, result) => {
                     if(err) res.status(500).json({response: err.message});
+                    console.log(result);
                 });
-            }) ();*/
+            }) ();
     
             let tokenIdentifier = crypto.randomBytes(16).toString('hex');
             req.session.tokId = tokenIdentifier;
 
-            let accessToken = jwt.sign({user: accountCredentials.email}, secret, {expiresIn: '15m'});
-            let refreshToken = jwt.sign({tokenId: tokenIdentifier, user: accountCredentials.email}, secret, {expiresIn: '15m'});
+            let accessToken = jwt.sign({tokenId: tokenIdentifier, user: accountCredentials.email}, secret, {expiresIn: '1h'});
+            let refreshToken = jwt.sign({tokenId: tokenIdentifier}, secret, {expiresIn: '1h'});
             
             res.cookie("refresh_token", JSON.stringify({
                 token: refreshToken
@@ -105,8 +107,8 @@ exports.refreshToken = function (req, res) {
             let newTokenIdentifier = crypto.randomBytes(16).toString('hex');
             req.session.tokId = newTokenIdentifier;
 
-            let newAccessToken = jwt.sign({user: email}, secret, {expiresIn: '15m'})
-            let newRefreshToken = jwt.sign({tokenId: newTokenIdentifier, user: email}, secret, {expiresIn: '15m'});
+            let newAccessToken = jwt.sign({user: email}, secret, {expiresIn: '1h'})
+            let newRefreshToken = jwt.sign({tokenId: newTokenIdentifier, user: email}, secret, {expiresIn: '1h'});
 
             res.cookie("refresh_token", JSON.stringify({
                 token: newRefreshToken
