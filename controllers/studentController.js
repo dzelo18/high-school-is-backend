@@ -25,7 +25,7 @@ exports.getTimetableForStudent = function (req, res) {
     });
 };
 
-exports.getAssignments = function (req, res) {
+exports.getAssignmentsForStudent = function (req, res) {
     let sql = `SELECT * FROM Assignment WHERE Assignment.classID = (SELECT classID FROM Student WHERE Student.userID = ?) 
     AND Assignment.courseID IN (SELECT courseID FROM CourseSelections WHERE studentID=?)`;
     db.query(sql, [req.params.id, req.params.id], (err, result) => {
@@ -82,6 +82,19 @@ exports.getCourseAttendanceForStudent = function (req, res) {
     db.query(sql, [req.params.id, req.params.courseId], (err, result) => {
         if(err) {
             console.log(err.message);
+            res.status(500).json({errorMessage: err.message});
+        } else {
+            console.log(result);
+            res.status(200).json(result);
+        }
+    });
+};
+
+exports.getCourseAssignmentsForStudent = function (req, res) {
+    let sql = `SELECT * FROM Assignment WHERE Assignment.classID = (SELECT classID FROM Student WHERE Student.userID = ?) 
+    AND Assignment.courseID = ?`;
+    db.query(sql, [req.params.id, req.params.courseId], (err, result) => {
+        if(err) {
             res.status(500).json({errorMessage: err.message});
         } else {
             console.log(result);
