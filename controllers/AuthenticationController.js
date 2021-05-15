@@ -27,7 +27,8 @@ exports.signIn = async function(req, res) {
 		let userId;
 
 		await db.promise().query(sql, [accCredentials.email, hashedPassword]).then(([rows, fields]) => {
-			console.log(rows);
+            if(rows.length == 0) throw new Error("No user was found with the provided credentials!");
+            userId = rows[0]['userID'];
 		}).catch((err) => {
 			throw new Error(err);
 		});
@@ -46,10 +47,10 @@ exports.signIn = async function(req, res) {
 		});
 
 		res.status(201).send({
-			message: "Account created successfully!",
+			message: "User authenticated succesffully!",
 			token: accessToken,
 			accountData: {
-				userId: userId,
+				user: userId,
 			}
 		});
 
