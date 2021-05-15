@@ -15,8 +15,8 @@ var auth = require('./routes/auth.js');
 const app = express();
 
 // Middlewares + Features
-app.use(cookie_parser());
 app.use(express.json());
+app.use(cookie_parser());
 app.use(express.urlencoded());
 app.use(cors({ origin: true }));
 app.use(session({
