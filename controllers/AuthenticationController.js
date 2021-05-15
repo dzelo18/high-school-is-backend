@@ -3,6 +3,7 @@ const yup = require('yup');
 const sha256 = require('sha256');
 const db = require('../db.js');
 const crypto = require('crypto');
+const utils = require('../utils/resUtils');
 
 let secret = process.env.TOKEN_SECRET;
 
@@ -13,19 +14,19 @@ const credentialSchema = yup.object({
 
 exports.authorizeRequest = function(req, res, next) {
 	let header = req.headers['authorization'];
-	if (!header) res.status(401).send('Unauthorized Request!');
+	if (!header) res.status(401).send(utils.buildResponse("ERROR", {}, "Unauthorized Request!"));
 
 	const token = header.split(' ')[1];
-	if (!token) res.status(401).send("Unauthorized Request!");
+	if (!token) res.status(401).send(utils.buildResponse("ERROR", {}, "Unauthorized Request!"));
 
 	jwt.verify(token, secret, (err, data) => {
-		if (err) res.status(401).send("Couldn't validate token!");
+		if (err) res.status(401).send(utils.buildResponse("ERROR", {}, "Could not validate token!"));
 		let userID = data.userID;
-		if (!userID) res.status(401).send("Invalid Token!");
+		if (!userID) res.status(401).send(utils.buildResponse("ERROR", {}, "Invalid token type!"));
 		let sql = 'SELECT COUNT(*) AS accountCount FROM USER WHERE userID=?';
 		db.query(sql, [userID], (err, result) => {
 			if (err) res.status(500).json({ response: err.message });
-			if (result[0].accountCount == 0) res.status(401).send("Invalid supplied account!");
+			if (result[0].accountCount == 0) res.status(401).send(utils.buildResponse("ERROR", {}, "Cannot authenticate user from token!"));
 		});
 		next();
 	});
@@ -65,15 +66,9 @@ exports.signup = async function(req, res) {
 			httpOnly: true,
 		});
 
-		res.status(201).send({
-			message: "Account created successfully!",
-			token: accessToken,
-			accountData: {
-				userId: userId,
-			}
-		});
+		res.status(201).send(utils.buildResponse("OK", {token: accessToken}, "Account created successfully!"));
 	} catch (ex) {
-		res.status(400).json({ message: ex.message });
+		res.status(400).send(utils.buildResponse("ERROR", {}, ex.message));
 	}
 }
 
@@ -112,16 +107,9 @@ exports.signIn = async function(req, res) {
 			httpOnly: true,
 		});
 
-		res.status(201).send({
-			message: "User authenticated succesffully!",
-			token: accessToken,
-			accountData: {
-				user: userId,
-			}
-		});
-
+        res.status(201).send(utils.buildResponse("OK", {token: accessToken}, "User authenticated succesffully!"));
 	} catch (ex) {
-		res.status(400).json({ message: ex.message });
+		res.status(400).send(utils.buildResponse("ERROR", {}, ex.message));
 	}
 
 }
@@ -155,16 +143,9 @@ exports.refreshToken = function(req, res) {
 				httpOnly: true,
 			});
 
-			res.status(201).send({
-				message: "Token refreshed successfully!",
-				token: newAccessToken,
-				accountData: {
-					user: userId,
-				}
-			});
-
+            res.status(201).send(utils.buildResponse("OK", {token: newAccessToken}, "Token refreshed successfully!"));
 		} catch (ex) {
-			res.status(500).send(ex.message);
+			res.status(400).send(utils.buildResponse("ERROR", {}, ex.message));
 		}
 
 	})();
