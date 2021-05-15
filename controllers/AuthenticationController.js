@@ -22,11 +22,11 @@ exports.signIn = async function(req, res) {
 		}
 
 		let sql = 'SELECT * FROM User WHERE username=? AND password=?'
-		let hashedPassword = await bcrypt.hash(accCredentials.password, 10);
+		//let hashedPassword = await bcrypt.hash(accCredentials.password, 10);
 
 		let userId;
 
-		await db.promise().query(sql, [accCredentials.email, hashedPassword]).then(([rows, fields]) => {
+		await db.promise().query(sql, [accCredentials.email, accCredentials.password]).then(([rows, fields]) => {
             if(rows.length == 0) throw new Error("No user was found with the provided credentials!");
             userId = rows[0]['userID'];
 		}).catch((err) => {
@@ -90,11 +90,11 @@ exports.signup = async function(req, res) {
 			throw new Error("Invalid data format supplied!");
 		}
 		let userId;
-		let hashedPassword = await bcrypt.hash(accountCredentials.password, 10);
+		//let hashedPassword = await bcrypt.hash(accountCredentials.password, 10);
 
 		let sql = `INSERT INTO User (role, username, password) VALUES ("student", ?, ?)`;
 
-		await db.promise().query(sql, [accountCredentials.email, hashedPassword]).then(([rows, fields]) => {
+		await db.promise().query(sql, [accountCredentials.email, accountCredentials.password]).then(([rows, fields]) => {
 			userId = rows.insertId;
 		}).catch((err) => {
 			throw new Error(err);
@@ -123,7 +123,6 @@ exports.signup = async function(req, res) {
 	} catch (ex) {
 		res.status(400).json({ message: ex.message });
 	}
-
 }
 
 exports.refreshToken = function(req, res) {
