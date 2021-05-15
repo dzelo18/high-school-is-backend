@@ -11,8 +11,52 @@ const signUpSchema = yup.object({
     password: yup.string().required()
 });
 
-exports.signIn = function (req, res) {
+exports.signIn = async function (req, res) {
+    let body = req.body;
+    let accCredentials = body.credentials;
 
+    try {
+
+        if (!signUpSchema.isValidSync(accCredentials) ){
+            throw new Error("Invalid data format supplied!");
+        }
+
+        let sql = 'SELECT * FROM User WHERE username=? AND password=?'
+        let hashedPassword = await bcrypt.hash(accCredentials.password, 10);
+
+        let userId;
+
+        await db.promise().query(sql, [accCredentials.email, hashedPassword]).then( ([rows, fields]) => {
+            console.log(rows);
+        }).catch( (err) => {
+            throw new Error(err);
+        });
+
+        let tokenIdentifier = crypto.randomBytes(16).toString('hex');
+        req.session.tokId = tokenIdentifier;
+        req.session.userId = userId;
+
+        let accessToken = jwt.sign({user: userId}, secret, {expiresIn: '1h'});
+        let refreshToken = jwt.sign({tokenId: tokenIdentifier}, secret, {expiresIn: '1h'});
+        
+        res.cookie("refresh_token", JSON.stringify({
+            token: refreshToken
+        }), {
+            httpOnly: true,
+        });
+    
+        res.status(201).send({
+            message: "Account created successfully!",
+            token: accessToken,
+            accountData: {
+                userId: userId,
+            }
+        });
+
+    } catch (ex) {
+        res.status(400).json({message: ex.message});
+    }
+    
 }
 
 exports.authorizeRequest = function (req, res, next) {
@@ -57,8 +101,9 @@ exports.signup = async function (req, res) {
     
             let tokenIdentifier = crypto.randomBytes(16).toString('hex');
             req.session.tokId = tokenIdentifier;
+            req.session.userId = userId;
 
-            let accessToken = jwt.sign({tokenId: tokenIdentifier, user: accountCredentials.email}, secret, {expiresIn: '1h'});
+            let accessToken = jwt.sign({user: userId}, secret, {expiresIn: '1h'});
             let refreshToken = jwt.sign({tokenId: tokenIdentifier}, secret, {expiresIn: '1h'});
             
             res.cookie("refresh_token", JSON.stringify({
@@ -72,7 +117,6 @@ exports.signup = async function (req, res) {
                 token: accessToken,
                 accountData: {
                     userId: userId,
-                    role: "student"
                 }
             });
         } catch(ex){
@@ -87,23 +131,21 @@ exports.refreshToken = function (req, res) {
     (async() => {
         try{
             let tokenIdentifier = req.session.tokId;
+            let userId = req.session.userId;
             let refreshToken = JSON.parse(req.cookies.refresh_token);
             console.log(refreshToken);
             console.log(refreshToken.token);
             if(!refreshToken) throw new Error('Could not retrieve refresh token!');
-            
-            let email;
 
             jwt.verify(refreshToken.token, secret, (err, data) => {
                 if(err) throw new Error(err.message);
                 if(data.tokenId != tokenIdentifier) throw new Error('Could not authorize session!');
-                email = data.user;
             });
 
             let newTokenIdentifier = crypto.randomBytes(16).toString('hex');
             req.session.tokId = newTokenIdentifier;
 
-            let newAccessToken = jwt.sign({user: email}, secret, {expiresIn: '1h'})
+            let newAccessToken = jwt.sign({user: userId}, secret, {expiresIn: '1h'})
             let newRefreshToken = jwt.sign({tokenId: newTokenIdentifier, user: email}, secret, {expiresIn: '1h'});
 
             res.cookie("refresh_token", JSON.stringify({
@@ -116,8 +158,7 @@ exports.refreshToken = function (req, res) {
                 message: "Token refreshed successfully!",
                 token: newAccessToken,
                 accountData: {
-                    email: email,
-                    role: "student"
+                    user: userId,
                 }
             });
 

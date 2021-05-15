@@ -31,7 +31,7 @@ let secret = process.env.TOKEN_SECRET;
 app.use('/students', authenticationController.authorizeRequest, student);
 app.use('/auth', auth);
 
-const port = 5000;
+const port = 4500;
 
 app.listen(port, () => {
     console.log(`Server started at http://localhost:${port}`)
