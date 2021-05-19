@@ -2,7 +2,7 @@ var express = require('express');
 var router = express.Router();
 
 // Require controller module
-var studentController = require('../controllers/StudentController.js');
+var studentController = require('../controllers/studentController.js');
 
 router.get('/:id/courses', studentController.getCourses);
 router.get('/:id/timetable', studentController.getTimetableForStudent);
