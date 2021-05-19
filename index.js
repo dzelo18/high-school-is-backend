@@ -15,8 +15,8 @@ var auth = require('./routes/auth.js');
 const app = express();
 
 // Middlewares + Features
-app.use(cookie_parser());
 app.use(express.json());
+app.use(cookie_parser());
 app.use(express.urlencoded());
 app.use(cors({ origin: true }));
 app.use(session({
@@ -31,7 +31,7 @@ let secret = process.env.TOKEN_SECRET;
 app.use('/students', authenticationController.authorizeRequest, student);
 app.use('/auth', auth);
 
-const port = 5000;
+const port = process.env.PORT || 4500;
 
 app.listen(port, () => {
     console.log(`Server started at http://localhost:${port}`)
