@@ -2,10 +2,12 @@ const express = require('express');
 const session = require('express-session');
 const cors = require('cors');
 const cookie_parser = require('cookie-parser');
+const encryptionUtils = require('./utils/encryptionUtils');
 const dotenv = require('dotenv');
 dotenv.config();
+
 //const crypto = require('crypto');
-//console.log(crypto.randomBytes(32).toString('hex'));
+//console.log(crypto.randomBytes(64).toString('hex'));
 
 var authenticationController = require('./controllers/AuthenticationController.js');
 
@@ -23,7 +25,7 @@ app.use(session({
     secret: process.env.SESSION_SECRET,
     resave: false,
     saveUninitialized: false
-}))
+}));
 
 let secret = process.env.TOKEN_SECRET;
 
@@ -31,10 +33,20 @@ let secret = process.env.TOKEN_SECRET;
 app.use('/students', authenticationController.authorizeRequest, student);
 app.use('/auth', auth);
 
+app.use('/test', (req, res, next) => {
+    let body = req.body;
+    let id = body.id;
+
+    res.send({
+        encrypted: id,
+        decrypted: encryptionUtils.decrypt(id)
+    });
+});
+
 const port = process.env.PORT || 4500;
 
 app.listen(port, () => {
-    console.log(`Server started at http://localhost:${port}`)
+    console.log(`Server started at http://localhost:${port}`);
 });
 
 module.exports = app

@@ -4,6 +4,7 @@ const sha256 = require('sha256');
 const db = require('../db.js');
 const crypto = require('crypto');
 const utils = require('../utils/resUtils');
+const encryptionUtils = require('../utils/encryptionUtils');
 
 let secret = process.env.TOKEN_SECRET;
 
@@ -48,25 +49,11 @@ exports.signup = async function(req, res) {
 		let sql = `INSERT INTO User (role, username, password) VALUES ("student", ?, ?)`;
 
 		await db.promise().query(sql, [accCredentials.email, hashedPassword]).then(([rows, fields]) => {
+			utils.buildResponse("OK" , {}, "User registered succesfully!")
 			userId = rows.insertId;
 		}).catch((err) => {
 			throw new Error(err);
 		});
-
-		let tokenIdentifier = crypto.randomBytes(16).toString('hex');
-		req.session.tokId = tokenIdentifier;
-		req.session.userId = userId;
-
-		let accessToken = jwt.sign({ user: userId }, secret, { expiresIn: '1h' });
-		let refreshToken = jwt.sign({ tokenId: tokenIdentifier }, secret, { expiresIn: '1h' });
-
-		res.cookie("refresh_token", JSON.stringify({
-			token: refreshToken
-		}), {
-			httpOnly: true,
-		});
-
-		res.status(201).send(utils.buildResponse("OK", {token: accessToken}, "Account created successfully!"));
 	} catch (ex) {
 		res.status(400).send(utils.buildResponse("ERROR", {}, ex.message));
 	}
@@ -102,12 +89,12 @@ exports.signIn = async function(req, res) {
 		let refreshToken = jwt.sign({ tokenId: tokenIdentifier }, secret, { expiresIn: '1h' });
 
 		res.cookie("refresh_token", JSON.stringify({
-			token: refreshToken
+			token: refreshToken,
 		}), {
 			httpOnly: true,
 		});
 
-        res.status(201).send(utils.buildResponse("OK", {token: accessToken}, "User authenticated succesffully!"));
+        res.status(201).send(utils.buildResponse("OK", {token: accessToken, userID: encryptionUtils.encrypt(userId)}, "User authenticated succesffully!"));
 	} catch (ex) {
 		res.status(400).send(utils.buildResponse("ERROR", {}, ex.message));
 	}
