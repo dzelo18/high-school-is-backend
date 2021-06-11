@@ -1,9 +1,12 @@
 const e = require('express');
 var db = require('../db.js');
 
+const encryptionUtils = require('../utils/encryptionUtils');
+
 exports.getCourses = function (req, res) {
     let sql = 'SELECT * FROM Course WHERE Course.courseID IN (SELECT courseID FROM CourseSelections WHERE studentID=?)';
-    db.query(sql, [req.params.id], (err, result) => {
+    let id = encryptionUtils.decrypt(req.params.id);
+    db.query(sql, [id], (err, result) => {
         if(err) {
             res.status(500).json({errorMessage: err.message});
         } else {
@@ -15,7 +18,8 @@ exports.getCourses = function (req, res) {
 
 exports.getTimetableForStudent = function (req, res) {
     let sql = 'SELECT * FROM Timetable WHERE Timetable.courseID IN (SELECT courseID FROM CourseSelections WHERE studentID=?)';
-    db.query(sql, [req.params.id], (err, result) => {
+    let id = encryptionUtils.decrypt(req.params.id);
+    db.query(sql, [id], (err, result) => {
         if(err) {
             res.status(500).json({errorMessage: err.message});
         } else {
@@ -28,7 +32,8 @@ exports.getTimetableForStudent = function (req, res) {
 exports.getAssignmentsForStudent = function (req, res) {
     let sql = `SELECT * FROM Assignment WHERE Assignment.classID = (SELECT classID FROM Student WHERE Student.userID = ?) 
     AND Assignment.courseID IN (SELECT courseID FROM CourseSelections WHERE studentID=?)`;
-    db.query(sql, [req.params.id, req.params.id], (err, result) => {
+    let id = encryptionUtils.decrypt(req.params.id);
+    db.query(sql, [id, id], (err, result) => {
         if(err) {
             res.status(500).json({errorMessage: err.message});
         } else {
@@ -40,7 +45,8 @@ exports.getAssignmentsForStudent = function (req, res) {
 
 exports.getAttendanceForStudent = function (req, res) {
     let sql = `SELECT * FROM Attendance WHERE studentID = ? AND courseID IN (SELECT courseID FROM CourseSelections WHERE studentID=?)`;
-    db.query(sql, [req.params.id, req.params.id], (err, result) => {
+    let id = encryptionUtils.decrypt(req.params.id);
+    db.query(sql, [id, id], (err, result) => {
         if(err) {
             console.log(err.message);
             res.status(500).json({errorMessage: err.message});
@@ -53,7 +59,8 @@ exports.getAttendanceForStudent = function (req, res) {
 
 exports.getGradesForStudent = function (req, res) {
     let sql = `SELECT * FROM Grades WHERE studentID = ? AND courseID IN (SELECT courseID FROM CourseSelections WHERE studentID=?)`;
-    db.query(sql, [req.params.id, req.params.id], (err, result) => {
+    let id = encryptionUtils.decrypt(req.params.id);
+    db.query(sql, [id, id], (err, result) => {
         if(err) {
             console.log(err.message);
             res.status(500).json({errorMessage: err.message});
@@ -66,7 +73,8 @@ exports.getGradesForStudent = function (req, res) {
 
 exports.getCourseGradesForStudent = function (req, res) {
     let sql = `SELECT * FROM Grades WHERE studentID = ? AND courseID = ?`;
-    db.query(sql, [req.params.id, req.params.id, req.params.courseId], (err, result) => {
+    let id = encryptionUtils.decrypt(req.params.id);
+    db.query(sql, [id, id, req.params.courseId], (err, result) => {
         if(err) {
             console.log(err.message);
             res.status(500).json({errorMessage: err.message});
@@ -79,7 +87,8 @@ exports.getCourseGradesForStudent = function (req, res) {
 
 exports.getCourseAttendanceForStudent = function (req, res) {
     let sql = `SELECT * FROM Attendance WHERE studentID = ? AND courseID = ?`;
-    db.query(sql, [req.params.id, req.params.courseId], (err, result) => {
+    let id = encryptionUtils.decrypt(req.params.id);
+    db.query(sql, [id, req.params.courseId], (err, result) => {
         if(err) {
             console.log(err.message);
             res.status(500).json({errorMessage: err.message});
@@ -93,7 +102,8 @@ exports.getCourseAttendanceForStudent = function (req, res) {
 exports.getCourseAssignmentsForStudent = function (req, res) {
     let sql = `SELECT * FROM Assignment WHERE Assignment.classID = (SELECT classID FROM Student WHERE Student.userID = ?) 
     AND Assignment.courseID = ?`;
-    db.query(sql, [req.params.id, req.params.courseId], (err, result) => {
+    let id = encryptionUtils.decrypt(req.params.id);
+    db.query(sql, [id, req.params.courseId], (err, result) => {
         if(err) {
             res.status(500).json({errorMessage: err.message});
         } else {
