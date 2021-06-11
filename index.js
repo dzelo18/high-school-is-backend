@@ -2,7 +2,6 @@ const express = require('express');
 const session = require('express-session');
 const cors = require('cors');
 const cookie_parser = require('cookie-parser');
-const encryptionUtils = require('./utils/encryptionUtils');
 const dotenv = require('dotenv');
 dotenv.config();
 
@@ -32,16 +31,6 @@ let secret = process.env.TOKEN_SECRET;
 //Routes
 app.use('/students', authenticationController.authorizeRequest, student);
 app.use('/auth', auth);
-
-app.use('/test', (req, res, next) => {
-    let body = req.body;
-    let id = body.id;
-
-    res.send({
-        encrypted: id,
-        decrypted: encryptionUtils.decrypt(id)
-    });
-});
 
 const port = process.env.PORT || 4500;
 
