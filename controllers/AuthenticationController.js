@@ -22,7 +22,7 @@ exports.authorizeRequest = function(req, res, next) {
 
 	jwt.verify(token, secret, (err, data) => {
 		if (err) res.status(401).send(utils.buildResponse("ERROR", {}, "Could not validate token!"));
-		let userID = data.userID;
+		let userID = data.user;
 		if (!userID) res.status(401).send(utils.buildResponse("ERROR", {}, "Invalid token type!"));
 		let sql = 'SELECT COUNT(*) AS accountCount FROM USER WHERE userID=?';
 		db.query(sql, [userID], (err, result) => {
@@ -85,7 +85,7 @@ exports.signIn = async function(req, res) {
 		req.session.tokId = tokenIdentifier;
 		req.session.userId = userId;
 
-		let accessToken = jwt.sign({ user: userId }, secret, { expiresIn: '1h' });
+		let accessToken = jwt.sign({ user: encryptionUtils.encrypt(userId) }, secret, { expiresIn: '1h' });
 		let refreshToken = jwt.sign({ tokenId: tokenIdentifier }, secret, { expiresIn: '1h' });
 
 		res.cookie("refresh_token", JSON.stringify({
