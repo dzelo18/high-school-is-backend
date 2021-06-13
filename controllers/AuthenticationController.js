@@ -85,7 +85,7 @@ exports.signIn = async function(req, res) {
 		req.session.tokId = tokenIdentifier;
 		req.session.userId = userId;
 
-		let accessToken = jwt.sign({ user: encryptionUtils.encrypt(userId) }, secret, { expiresIn: '1h' });
+		let accessToken = jwt.sign({ user: userId }, secret, { expiresIn: '1h' });
 		let refreshToken = jwt.sign({ tokenId: tokenIdentifier }, secret, { expiresIn: '1h' });
 
 		res.cookie("refresh_token", JSON.stringify({
