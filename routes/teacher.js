@@ -2,7 +2,7 @@ var express = require('express');
 var router = express.Router();
 
 // Require controller module
-var studentController = require('../controllers/teacherController.js');
+var teacherController = require('../controllers/teacherController.js');
 
 router.post('/assignGrade', teacherController.assignGrade);
 router.post('/assignAttendance', teacherController.assignAttendance);

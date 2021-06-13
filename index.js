@@ -11,6 +11,7 @@ dotenv.config();
 var authenticationController = require('./controllers/AuthenticationController.js');
 
 var student = require('./routes/student.js');
+var teacher = require('./routes/teacher.js');
 var auth = require('./routes/auth.js');
 
 const app = express();
@@ -30,6 +31,7 @@ let secret = process.env.TOKEN_SECRET;
 
 //Routes
 app.use('/students', authenticationController.authorizeRequest, student);
+app.use('/teachers', teacher);
 app.use('/auth', auth);
 
 const port = process.env.PORT || 4500;
