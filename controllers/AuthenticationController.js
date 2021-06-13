@@ -13,24 +13,27 @@ const credentialSchema = yup.object({
 	password: yup.string().required()
 });
 
-exports.authorizeRequest = function(req, res, next) {
+exports.authorizeRequest = async function(req, res, next) {
 	let header = req.headers['authorization'];
-	if (!header) res.status(401).send(utils.buildResponse("ERROR", {}, "Unauthorized Request!"));
-
+	if (!header) return res.status(401).send(utils.buildResponse("ERROR", {}, "Unauthorized Request!"));
+	console.log("PASSED FIRST IF!");
 	const token = header.split(' ')[1];
-	if (!token) res.status(401).send(utils.buildResponse("ERROR", {}, "Unauthorized Request!"));
+	if (!token) return res.status(401).send(utils.buildResponse("ERROR", {}, "Unauthorized Request!"));
+	console.log("PASSED SECOND IF!");
 
-	jwt.verify(token, secret, (err, data) => {
+	await jwt.verify(token, secret, (err, data) => {
 		if (err) res.status(401).send(utils.buildResponse("ERROR", {}, "Could not validate token!"));
+		console.log("PASSED THIRD IF!");
 		let userID = data.user;
-		if (!userID) res.status(401).send(utils.buildResponse("ERROR", {}, "Invalid token type!"));
+		if (!userID) return res.status(401).send(utils.buildResponse("ERROR", {}, "Invalid token type!"));
+		console.log("PASSED FOURTH IF!");
 		let sql = 'SELECT COUNT(*) AS accountCount FROM USER WHERE userID=?';
 		db.query(sql, [userID], (err, result) => {
-			if (err) res.status(500).json({ response: err.message });
-			if (result[0].accountCount == 0) res.status(401).send(utils.buildResponse("ERROR", {}, "Cannot authenticate user from token!"));
+			if (err) return res.status(500).json({ response: err.message });
+			if (result[0].accountCount == 0) return res.status(401).send(utils.buildResponse("ERROR", {}, "Cannot authenticate user from token!"));
 		});
-		next();
 	});
+	console.log("WOW");
 }
 
 exports.signup = async function(req, res) {
@@ -49,8 +52,9 @@ exports.signup = async function(req, res) {
 		let sql = `INSERT INTO User (role, username, password) VALUES ("student", ?, ?)`;
 
 		await db.promise().query(sql, [accCredentials.email, hashedPassword]).then(([rows, fields]) => {
-			utils.buildResponse("OK" , {}, "User registered succesfully!")
 			userId = rows.insertId;
+			res.status(200).send(utils.buildResponse("OK" , {}, "User registered succesfully!"));
+			
 		}).catch((err) => {
 			throw new Error(err);
 		});

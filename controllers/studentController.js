@@ -46,21 +46,22 @@ exports.getAttendanceForStudent = function (req, res) {
     let id = encryptionUtils.decrypt(req.params.id);
     db.query(sql, [id, id], (err, result) => {
         if(err) {
-            res.status(500).send(utils.buildResponse("error", {}, err.message));
+            return res.status(500).send(utils.buildResponse("error", {}, err.message));
         } else {
-            res.status(200).send(utils.buildResponse("success", result, ""));
+            return res.status(200).send(utils.buildResponse("success", result, ""));
         }
     });
 };
 
 exports.getGradesForStudent = function (req, res) {
+    console.log("ARRIVED AT STUDENT MIDDLEWARE!");
     let sql = `SELECT * FROM Grades WHERE studentID = ? AND courseID IN (SELECT courseID FROM CourseSelections WHERE studentID=?)`;
     let id = encryptionUtils.decrypt(req.params.id);
     db.query(sql, [id, id], (err, result) => {
         if(err) {
-            res.status(500).send(utils.buildResponse("error", {}, err.message));
+            return res.status(500).send(utils.buildResponse("error", {}, err.message));
         } else {
-            res.status(200).send(utils.buildResponse("success", result, ""));
+            return res.status(200).send(utils.buildResponse("success", result, ""));
         }
     });
 };
