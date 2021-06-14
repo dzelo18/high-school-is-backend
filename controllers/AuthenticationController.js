@@ -16,24 +16,20 @@ const credentialSchema = yup.object({
 exports.authorizeRequest = async function(req, res, next) {
 	let header = req.headers['authorization'];
 	if (!header) return res.status(401).send(utils.buildResponse("ERROR", {}, "Unauthorized Request!"));
-	console.log("PASSED FIRST IF!");
 	const token = header.split(' ')[1];
 	if (!token) return res.status(401).send(utils.buildResponse("ERROR", {}, "Unauthorized Request!"));
-	console.log("PASSED SECOND IF!");
 
 	await jwt.verify(token, secret, (err, data) => {
 		if (err) res.status(401).send(utils.buildResponse("ERROR", {}, "Could not validate token!"));
-		console.log("PASSED THIRD IF!");
 		let userID = data.user;
 		if (!userID) return res.status(401).send(utils.buildResponse("ERROR", {}, "Invalid token type!"));
-		console.log("PASSED FOURTH IF!");
-		let sql = 'SELECT COUNT(*) AS accountCount FROM USER WHERE userID=?';
+		let sql = 'SELECT COUNT(*) AS accountCount FROM User WHERE userID=?';
 		db.query(sql, [userID], (err, result) => {
-			if (err) return res.status(500).json({ response: err.message });
+			if (err) return res.status(500).send(utils.buildResponse("error", {}, err.message));
 			if (result[0].accountCount == 0) return res.status(401).send(utils.buildResponse("ERROR", {}, "Cannot authenticate user from token!"));
 		});
+		next();
 	});
-	console.log("WOW");
 }
 
 exports.signup = async function(req, res) {

@@ -55,7 +55,7 @@ exports.getAttendanceForStudent = function (req, res) {
 
 exports.getGradesForStudent = function (req, res) {
     console.log("ARRIVED AT STUDENT MIDDLEWARE!");
-    let sql = `SELECT * FROM Grades WHERE studentID = ? AND courseID IN (SELECT courseID FROM CourseSelections WHERE studentID=?)`;
+    let sql = `SELECT * FROM Grade WHERE studentID = ? AND courseID IN (SELECT courseID FROM CourseSelections WHERE studentID=?)`;
     let id = encryptionUtils.decrypt(req.params.id);
     db.query(sql, [id, id], (err, result) => {
         if(err) {
@@ -67,19 +67,20 @@ exports.getGradesForStudent = function (req, res) {
 };
 
 exports.getAverageGradeForStudent = function (req, res) {
-    let sql = `SELECT grade FROM Grades WHERE studentID = ?`;
+    let sql = `SELECT grade FROM Grade WHERE studentID = ?`;
     let id = encryptionUtils.decrypt(req.params.id);
     db.query(sql, [id], (err, result) => {
         if(err) {
             res.status(500).send(utils.buildResponse("error", {}, err.message));
         } else {
+            console.log(result);
             let nrOfGrades = result.length;
             let sum = 0;
 
-            for(let i=0; i<nrOfGrades; i++) sum += result[i];
+            for(let i=0; i<nrOfGrades; i++) sum += result[i].grade;
             let average = sum / nrOfGrades;
 
-            res.status(200).send(utils.buildResponse("success", average, ""));
+            res.status(200).send(utils.buildResponse("success", {average: average}, ""));
         }
     });
 }
