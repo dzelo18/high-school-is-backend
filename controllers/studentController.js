@@ -115,7 +115,7 @@ exports.getLatestGradeForStudent = function (req, res) {
         if(err) {
             res.status(500).send(utils.buildResponse("error", {}, err.message));
         } else {
-            res.status(200).send(utils.buildResponse("success", {minGrade: result[0].grade, subject: result[0].name}, ""));
+            res.status(200).send(utils.buildResponse("success", {latestGrade: result[0].grade, subject: result[0].name}, ""));
         }
     });
 }

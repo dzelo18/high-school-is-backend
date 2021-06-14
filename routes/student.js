@@ -8,11 +8,13 @@ router.get('/:id/courses', studentController.getCourses);
 router.get('/:id/timetable', studentController.getTimetableForStudent);
 router.get('/:id/assignments', studentController.getAssignmentsForStudent);
 router.get('/:id/attendance', studentController.getAttendanceForStudent);
+
 router.get('/:id/grades', studentController.getGradesForStudent);
 router.get('/:id/average', studentController.getAverageGradeForStudent);
 router.get('/:id/max', studentController.getMaximumGradeForStudent);
 router.get('/:id/min', studentController.getMinimumGradeForStudent);
 router.get('/:id/latest', studentController.getLatestGradeForStudent);
+
 router.get('/:id/courses/:courseId/grades', studentController.getCourseGradesForStudent);
 router.get('/:id/courses/:courseId/average', studentController.getAverageGradeForStudent);
 router.get('/:id/courses/:courseId/attendance', studentController.getCourseAttendanceForStudent);
