@@ -73,7 +73,6 @@ exports.getAverageGradeForStudent = function (req, res) {
         if(err) {
             res.status(500).send(utils.buildResponse("error", {}, err.message));
         } else {
-            console.log(result);
             let nrOfGrades = result.length;
             let sum = 0;
 
@@ -81,6 +80,42 @@ exports.getAverageGradeForStudent = function (req, res) {
             let average = sum / nrOfGrades;
 
             res.status(200).send(utils.buildResponse("success", {average: average}, ""));
+        }
+    });
+}
+
+exports.getMaximumGradeForStudent = function (req, res) {
+    let sql = `SELECT Grade.grade, Course.name FROM Grade,Course WHERE studentID = ? AND Grade.courseID=Course.courseID ORDER BY Grade.grade DESC LIMIT 1`;
+    let id = encryptionUtils.decrypt(req.params.id);
+    db.query(sql, [id], (err, result) => {
+        if(err) {
+            res.status(500).send(utils.buildResponse("error", {}, err.message));
+        } else {
+            res.status(200).send(utils.buildResponse("success", {maxGrade: result[0].grade, subject: result[0].name}, ""));
+        }
+    });
+}
+
+exports.getMinimumGradeForStudent = function (req, res) {
+    let sql = `SELECT Grade.grade, Course.name FROM Grade,Course WHERE studentID = ? AND Grade.courseID=Course.courseID ORDER BY Grade.grade ASC LIMIT 1`;
+    let id = encryptionUtils.decrypt(req.params.id);
+    db.query(sql, [id], (err, result) => {
+        if(err) {
+            res.status(500).send(utils.buildResponse("error", {}, err.message));
+        } else {
+            res.status(200).send(utils.buildResponse("success", {minGrade: result[0].grade, subject: result[0].name}, ""));
+        }
+    });
+}
+
+exports.getLatestGradeForStudent = function (req, res) {
+    let sql = `SELECT Grade.grade, Course.name, Grade.date FROM Grade,Course WHERE studentID = ? AND Grade.courseID=Course.courseID ORDER BY Grade.date DESC LIMIT 1`;
+    let id = encryptionUtils.decrypt(req.params.id);
+    db.query(sql, [id], (err, result) => {
+        if(err) {
+            res.status(500).send(utils.buildResponse("error", {}, err.message));
+        } else {
+            res.status(200).send(utils.buildResponse("success", {minGrade: result[0].grade, subject: result[0].name}, ""));
         }
     });
 }
