@@ -23,12 +23,14 @@ exports.authorizeRequest = async function(req, res, next) {
 		if (err) res.status(401).send(utils.buildResponse("ERROR", {}, "Could not validate token!"));
 		let userID = data.user;
 		if (!userID) return res.status(401).send(utils.buildResponse("ERROR", {}, "Invalid token type!"));
-		let sql = 'SELECT COUNT(*) AS accountCount FROM User WHERE userID=?';
+		let sql = "SELECT * FROM User WHERE userID=?"
+		//let sql = 'SELECT COUNT(*) AS accountCount FROM User WHERE userID=?';
 		db.query(sql, [userID], (err, result) => {
 			if (err) return res.status(500).send(utils.buildResponse("error", {}, err.message));
-			if (result[0].accountCount == 0) return res.status(401).send(utils.buildResponse("ERROR", {}, "Cannot authenticate user from token!"));
+			if (result.length != 1) return res.status(401).send(utils.buildResponse("ERROR", {}, "Cannot authenticate user from token!"));
+			res.locals.role = result[0].role
+			next();
 		});
-		next();
 	});
 }
 
@@ -73,10 +75,12 @@ exports.signIn = async function(req, res) {
 		let hashedPassword = sha256(accCredentials.password);
 
 		let userId;
+		let role;
 
 		await db.promise().query(sql, [accCredentials.email, hashedPassword]).then(([rows, fields]) => {
             if(rows.length == 0) throw new Error("No user was found with the provided credentials!");
             userId = rows[0]['userID'];
+			role = rows[0]['role'];
 		}).catch((err) => {
 			throw new Error(err);
 		});
@@ -84,6 +88,7 @@ exports.signIn = async function(req, res) {
 		let tokenIdentifier = crypto.randomBytes(16).toString('hex');
 		req.session.tokId = tokenIdentifier;
 		req.session.userId = userId;
+		req.session.role = role;
 
 		let accessToken = jwt.sign({ user: userId }, secret, { expiresIn: '1h' });
 		let refreshToken = jwt.sign({ tokenId: tokenIdentifier }, secret, { expiresIn: '1h' });
@@ -94,7 +99,7 @@ exports.signIn = async function(req, res) {
 			httpOnly: true,
 		});
 
-        res.status(201).send(utils.buildResponse("OK", {token: accessToken, userID: encryptionUtils.encrypt(userId)}, "User authenticated succesffully!"));
+        res.status(201).send(utils.buildResponse("OK", {token: accessToken, userID: encryptionUtils.encrypt(userId), role: role}, "User authenticated succesffully!"));
 	} catch (ex) {
 		res.status(400).send(utils.buildResponse("ERROR", {}, ex.message));
 	}
@@ -108,6 +113,7 @@ exports.refreshToken = function(req, res) {
 		try {
 			let tokenIdentifier = req.session.tokId;
 			let userId = req.session.userId;
+			let role = req.session.role;
 			console.log(req.cookies);
 			if(!req.cookies.refresh_token) throw new Error('Could not retrieve refresh token!');
 			
@@ -130,7 +136,7 @@ exports.refreshToken = function(req, res) {
 				httpOnly: true,
 			});
 
-            res.status(201).send(utils.buildResponse("OK", {token: newAccessToken, userID: encryptionUtils.encrypt(userId)}, "Token refreshed successfully!"));
+            res.status(201).send(utils.buildResponse("OK", {token: newAccessToken, userID: encryptionUtils.encrypt(userId), role: role}, "Token refreshed successfully!"));
 		} catch (ex) {
 			return res.status(400).send(utils.buildResponse("ERROR", {}, ex.message));
 		}

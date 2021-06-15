@@ -31,7 +31,7 @@ let secret = process.env.TOKEN_SECRET;
 
 //Routes
 app.use('/students', authenticationController.authorizeRequest, student);
-app.use('/teachers', teacher);
+app.use('/teachers', authenticationController.authorizeRequest, teacher);
 app.use('/auth', auth);
 
 const port = process.env.PORT || 4500;
