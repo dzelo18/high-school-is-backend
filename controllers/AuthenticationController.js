@@ -114,7 +114,6 @@ exports.refreshToken = function(req, res) {
 			let tokenIdentifier = req.session.tokId;
 			let userId = req.session.userId;
 			let role = req.session.role;
-			console.log(req.cookies);
 			if(!req.cookies.refresh_token) throw new Error('Could not retrieve refresh token!');
 			
 			let refreshToken = JSON.parse(req.cookies.refresh_token);

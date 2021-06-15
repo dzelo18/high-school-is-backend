@@ -44,7 +44,6 @@ exports.getAssignmentsForStudent = function (req, res) {
 };
 
 exports.getGradesForStudent = function (req, res) {
-    console.log("ARRIVED AT STUDENT MIDDLEWARE!");
     let sql = `SELECT * FROM Grade WHERE studentID = ? AND courseID IN (SELECT courseID FROM CourseSelections WHERE studentID=?)`;
     let id = encryptionUtils.decrypt(req.params.id);
     db.query(sql, [id, id], (err, result) => {
@@ -69,6 +68,7 @@ exports.getAverageGradeForStudent = function (req, res, next) {
 
             for(let i=0; i<nrOfGrades; i++) sum += result[i].grade;
             let average = sum / nrOfGrades;
+            average = average.toFixed(2);
 			req.statistics.average = average;
 			next();
         }
@@ -82,9 +82,13 @@ exports.getMaximumGradeForStudent = function (req, res, next) {
         if(err) {
             res.status(500).send(utils.buildResponse("error", {}, err.message));
         } else {
-			req.statistics.maxGrade = result[0].grade;
-			req.statistics.maxSubject = result[0].name;
-			next();
+            if(result.length != 0){
+                req.statistics.maxGrade = result[0].grade;
+                req.statistics.maxSubject = result[0].name;
+                next();
+            }else{
+                return res.status(500).send(utils.buildResponse("error", {}, "The user with the provided id has no relevant data"));
+            }
         }
     });
 }
