@@ -108,10 +108,10 @@ exports.refreshToken = function(req, res) {
 		try {
 			let tokenIdentifier = req.session.tokId;
 			let userId = req.session.userId;
+			console.log(req.cookies);
+			if(!req.cookies.refresh_token) throw new Error('Could not retrieve refresh token!');
+			
 			let refreshToken = JSON.parse(req.cookies.refresh_token);
-			console.log(refreshToken);
-			console.log(refreshToken.token);
-			if (!refreshToken) throw new Error('Could not retrieve refresh token!');
 
 			jwt.verify(refreshToken.token, secret, (err, data) => {
 				if (err) throw new Error(err.message);
@@ -122,7 +122,7 @@ exports.refreshToken = function(req, res) {
 			req.session.tokId = newTokenIdentifier;
 
 			let newAccessToken = jwt.sign({ user: userId }, secret, { expiresIn: '1h' })
-			let newRefreshToken = jwt.sign({ tokenId: newTokenIdentifier, user: email }, secret, { expiresIn: '1h' });
+			let newRefreshToken = jwt.sign({ tokenId: newTokenIdentifier, user: userId }, secret, { expiresIn: '1h' });
 
 			res.cookie("refresh_token", JSON.stringify({
 				token: newRefreshToken
@@ -130,9 +130,9 @@ exports.refreshToken = function(req, res) {
 				httpOnly: true,
 			});
 
-            res.status(201).send(utils.buildResponse("OK", {token: newAccessToken}, "Token refreshed successfully!"));
+            res.status(201).send(utils.buildResponse("OK", {token: newAccessToken, userID: encryptionUtils.encrypt(userId)}, "Token refreshed successfully!"));
 		} catch (ex) {
-			res.status(400).send(utils.buildResponse("ERROR", {}, ex.message));
+			return res.status(400).send(utils.buildResponse("ERROR", {}, ex.message));
 		}
 
 	})();

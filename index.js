@@ -20,7 +20,7 @@ const app = express();
 app.use(express.json());
 app.use(cookie_parser());
 app.use(express.urlencoded());
-app.use(cors({ origin: true }));
+app.use(cors({ origin: true, credentials: true }));
 app.use(session({
     secret: process.env.SESSION_SECRET,
     resave: false,
